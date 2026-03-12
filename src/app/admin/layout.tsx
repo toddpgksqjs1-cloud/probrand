@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -11,7 +12,12 @@ import {
   Settings,
   ArrowLeft,
   Activity,
+  Shield,
+  LogOut,
 } from "lucide-react";
+
+const ADMIN_PASSWORD = "hyun2026!";
+const ADMIN_SESSION_KEY = "hyun_admin_session";
 
 const navItems = [
   { href: "/admin", label: "대시보드", icon: LayoutDashboard },
@@ -24,6 +30,94 @@ const navItems = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [isAdminAuth, setIsAdminAuth] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const session = localStorage.getItem(ADMIN_SESSION_KEY);
+    if (session === "authenticated") {
+      setIsAdminAuth(true);
+    }
+    setIsChecking(false);
+  }, []);
+
+  const handleAdminLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === ADMIN_PASSWORD) {
+      localStorage.setItem(ADMIN_SESSION_KEY, "authenticated");
+      setIsAdminAuth(true);
+      setError("");
+    } else {
+      setError("관리자 비밀번호가 올바르지 않습니다.");
+    }
+  };
+
+  const handleAdminLogout = () => {
+    localStorage.removeItem(ADMIN_SESSION_KEY);
+    setIsAdminAuth(false);
+    setPassword("");
+  };
+
+  if (isChecking) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-900">
+        <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isAdminAuth) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-900">
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-8">
+            <div className="w-14 h-14 bg-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Shield size={28} className="text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-white">Admin Access</h1>
+            <p className="text-sm text-gray-400 mt-2">슈퍼 관리자 전용 페이지입니다</p>
+          </div>
+
+          <form onSubmit={handleAdminLogin} className="space-y-4">
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm px-4 py-3 rounded-xl">
+                {error}
+              </div>
+            )}
+            <div>
+              <label htmlFor="admin-pw" className="block text-sm font-medium text-gray-300 mb-1.5">
+                관리자 비밀번호
+              </label>
+              <input
+                id="admin-pw"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="비밀번호를 입력하세요"
+                autoFocus
+                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500 transition"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-orange-500 text-white py-3 rounded-xl font-medium hover:bg-orange-600 transition flex items-center justify-center gap-2"
+            >
+              <Shield size={18} />
+              관리자 로그인
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <Link href="/dashboard" className="text-sm text-gray-500 hover:text-gray-300 transition">
+              ← 유저 대시보드로 돌아가기
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -61,7 +155,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
-        <div className="p-3 border-t border-gray-800">
+        <div className="p-3 border-t border-gray-800 space-y-1">
           <Link
             href="/dashboard"
             className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition"
@@ -69,6 +163,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <ArrowLeft size={16} />
             유저 대시보드
           </Link>
+          <button
+            onClick={handleAdminLogout}
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition w-full"
+          >
+            <LogOut size={16} />
+            어드민 로그아웃
+          </button>
         </div>
       </aside>
 
