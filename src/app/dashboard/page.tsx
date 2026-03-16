@@ -177,14 +177,33 @@ export default function DashboardPage() {
 
   const router = useRouter();
 
-  const handleRegisterStore = () => {
+  // Store registration form state
+  const [regForm, setRegForm] = useState({
+    name: "",
+    category: "",
+    address: "",
+    naverPlaceUrl: "",
+  });
+
+  // Initialize form from user's signup data
+  useEffect(() => {
     if (!user) return;
-    // Create store from user's signup data
-    const newStore = storesStorage.create(user.id, {
-      name: user.businessName || `${user.name}의 매장`,
-      category: user.businessCategory || "카페/디저트",
+    setRegForm({
+      name: user.businessName || "",
+      category: user.businessCategory || "",
       address: user.location || "",
       naverPlaceUrl: user.naverPlaceUrl || "",
+    });
+  }, [user]);
+
+  const handleRegisterStore = () => {
+    if (!user) return;
+    if (!regForm.name.trim() || !regForm.category.trim()) return;
+    const newStore = storesStorage.create(user.id, {
+      name: regForm.name.trim(),
+      category: regForm.category.trim(),
+      address: regForm.address.trim(),
+      naverPlaceUrl: regForm.naverPlaceUrl.trim(),
     });
     setStore(newStore);
   };
@@ -209,7 +228,7 @@ export default function DashboardPage() {
       });
       setRecentAnalyses(recent);
       setIsAnalyzing(false);
-    }, 800);
+    }, 1500);
   };
 
   if (!user) {
@@ -220,77 +239,102 @@ export default function DashboardPage() {
     );
   }
 
-  // Onboarding: No store registered yet
+  // Onboarding: No store registered yet → show registration form
   if (!store) {
+    const canSubmit = regForm.name.trim() && regForm.category.trim();
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center py-16">
-          <div className="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <Sparkles size={40} className="text-blue-600" />
+      <div className="max-w-xl mx-auto py-8">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <StoreIcon size={32} className="text-blue-600" />
           </div>
-          <h2 className="text-2xl font-bold mb-3">환영합니다, {user.name}님!</h2>
-          <p className="text-gray-500 mb-8">
-            매장을 등록하고 네이버 플레이스 분석을 시작하세요.
-          </p>
+          <h2 className="text-2xl font-bold mb-2">환영합니다, {user.name}님!</h2>
+          <p className="text-gray-500">매장 정보를 입력하고 분석을 시작하세요.</p>
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10 text-left">
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mb-3">
-                <StoreIcon size={20} className="text-blue-600" />
-              </div>
-              <h4 className="font-medium text-sm mb-1">1. 매장 등록</h4>
-              <p className="text-xs text-gray-500">매장 정보를 입력하고 등록합니다</p>
+        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              매장명 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={regForm.name}
+              onChange={(e) => setRegForm((p) => ({ ...p, name: e.target.value }))}
+              placeholder="예: 강남 디저트카페"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                업종 <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={regForm.category}
+                onChange={(e) => setRegForm((p) => ({ ...p, category: e.target.value }))}
+                className={`w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 ${!regForm.category ? "text-gray-400" : ""}`}
+              >
+                <option value="">업종 선택</option>
+                {["카페/디저트","한식","일식","중식","양식","치킨/피자","미용/뷰티","헬스/피트니스","학원/교육","기타"].map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
             </div>
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center mb-3">
-                <BarChart3 size={20} className="text-green-600" />
-              </div>
-              <h4 className="font-medium text-sm mb-1">2. 분석 실행</h4>
-              <p className="text-xs text-gray-500">네이버 플레이스 점수를 진단합니다</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">지역</label>
+              <input
+                type="text"
+                value={regForm.address}
+                onChange={(e) => setRegForm((p) => ({ ...p, address: e.target.value }))}
+                placeholder="예: 서울 강남구"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500"
+              />
             </div>
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center mb-3">
-                <TrendingUp size={20} className="text-amber-600" />
-              </div>
-              <h4 className="font-medium text-sm mb-1">3. 개선 실행</h4>
-              <p className="text-xs text-gray-500">맞춤 개선 액션으로 점수를 올립니다</p>
-            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">네이버 플레이스 URL</label>
+            <input
+              type="text"
+              value={regForm.naverPlaceUrl}
+              onChange={(e) => setRegForm((p) => ({ ...p, naverPlaceUrl: e.target.value }))}
+              placeholder="https://naver.me/... 또는 https://map.naver.com/..."
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500"
+            />
+            <p className="text-xs text-gray-400 mt-1">네이버 지도에서 내 매장을 검색한 후 URL을 복사해 주세요</p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <button
-              onClick={handleRegisterStore}
-              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-medium hover:bg-blue-700 transition flex items-center gap-2"
-            >
-              <StoreIcon size={18} />
-              매장 등록하기
-            </button>
-            <Link
-              href="/dashboard/settings"
-              className="text-sm text-gray-500 hover:text-gray-700 transition"
-            >
-              매장 정보를 직접 입력하려면 설정으로 →
-            </Link>
-          </div>
+          <button
+            onClick={handleRegisterStore}
+            disabled={!canSubmit}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+          >
+            <StoreIcon size={18} />
+            매장 등록하기
+          </button>
         </div>
       </div>
     );
   }
 
-  // Store exists but no analysis yet
+  // Store exists but no analysis yet → show analysis CTA
   if (!analysis) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center py-16">
-          <div className="w-20 h-20 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <BarChart3 size={40} className="text-green-600" />
+      <div className="max-w-xl mx-auto py-8">
+        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <BarChart3 size={32} className="text-green-600" />
           </div>
-          <h2 className="text-2xl font-bold mb-3">매장이 등록되었습니다!</h2>
-          <p className="text-gray-500 mb-2">
-            <span className="font-medium text-gray-700">{store.name}</span> ({store.category})
-          </p>
-          <p className="text-gray-500 mb-8">
-            이제 네이버 플레이스 분석을 실행해서 점수를 확인해보세요.
+          <h2 className="text-xl font-bold mb-2">매장이 등록되었습니다!</h2>
+          <div className="inline-flex items-center gap-2 bg-gray-50 rounded-lg px-4 py-2 mb-6">
+            <StoreIcon size={16} className="text-gray-500" />
+            <span className="text-sm font-medium">{store.name}</span>
+            <span className="text-xs text-gray-400">({store.category})</span>
+          </div>
+          <p className="text-gray-500 text-sm mb-6">
+            아래 버튼을 눌러 네이버 플레이스 분석을 시작하세요.
+            <br />
+            <span className="text-xs text-gray-400">* 현재 시뮬레이션 기반 분석입니다. 실제 크롤링은 추후 지원 예정입니다.</span>
           </p>
 
           <div className="flex flex-col items-center gap-3">
@@ -299,14 +343,23 @@ export default function DashboardPage() {
               disabled={isAnalyzing}
               className="bg-blue-600 text-white px-8 py-3 rounded-xl font-medium hover:bg-blue-700 transition flex items-center gap-2 disabled:opacity-50"
             >
-              <BarChart3 size={18} />
-              {isAnalyzing ? "분석 중..." : "첫 분석 시작하기"}
+              {isAnalyzing ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  분석 중...
+                </>
+              ) : (
+                <>
+                  <BarChart3 size={18} />
+                  분석 시작하기
+                </>
+              )}
             </button>
             <Link
               href="/dashboard/settings"
-              className="text-sm text-gray-500 hover:text-gray-700 transition flex items-center gap-1"
+              className="text-xs text-gray-400 hover:text-gray-600 transition flex items-center gap-1"
             >
-              <Settings size={14} />
+              <Settings size={12} />
               매장 정보 수정
             </Link>
           </div>
@@ -335,7 +388,10 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h3 className="text-lg font-bold">{store.name}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-bold">{store.name}</h3>
+                <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-medium">시뮬레이션</span>
+              </div>
               <p className="text-sm text-gray-500">{store.category} | {store.address}</p>
             </div>
             <div className="flex items-center gap-2 text-sm">

@@ -137,10 +137,14 @@ export default function AnalysisPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold">네이버 플레이스 분석 결과</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-bold">네이버 플레이스 분석 결과</h2>
+            <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-medium">시뮬레이션</span>
+          </div>
           <p className="text-sm text-gray-500 mt-1">
             {store.name} | 분석일: {new Date(analysis.createdAt).toLocaleDateString("ko-KR")}
           </p>
+          <p className="text-xs text-gray-400 mt-0.5">* 실제 네이버 크롤링이 아닌 시뮬레이션 기반 분석입니다</p>
         </div>
         <div className="flex gap-2">
           <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition">
