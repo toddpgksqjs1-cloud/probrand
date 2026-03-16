@@ -61,11 +61,11 @@ export interface Action {
 // ===== Keys =====
 
 const KEYS = {
-  USERS: 'hyun_users',
-  SESSION: 'hyun_session',
-  stores: (userId: string) => `hyun_stores_${userId}`,
-  analyses: (userId: string) => `hyun_analyses_${userId}`,
-  actions: (storeId: string) => `hyun_actions_${storeId}`,
+  USERS: 'hyun2_users',
+  SESSION: 'hyun2_session',
+  stores: (userId: string) => `hyun2_stores_${userId}`,
+  analyses: (userId: string) => `hyun2_analyses_${userId}`,
+  actions: (storeId: string) => `hyun2_actions_${storeId}`,
 } as const;
 
 // ===== Helpers =====

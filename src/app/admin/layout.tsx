@@ -16,7 +16,7 @@ import {
   LogOut,
 } from "lucide-react";
 
-const ADMIN_SESSION_KEY = "hyun_admin_session";
+const ADMIN_SESSION_KEY = "hyun2_admin_session";
 
 const navItems = [
   { href: "/admin", label: "대시보드", icon: LayoutDashboard },
