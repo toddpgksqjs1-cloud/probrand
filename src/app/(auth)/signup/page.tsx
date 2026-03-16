@@ -83,7 +83,7 @@ export default function SignupPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setGeneralError("");
 
@@ -91,7 +91,7 @@ export default function SignupPage() {
 
     setIsSubmitting(true);
 
-    const result = signup(form.email, form.password, form.name, {
+    const result = await signup(form.email, form.password, form.name, {
       businessName: form.businessName || undefined,
       businessCategory: form.businessCategory,
       location: form.location || undefined,

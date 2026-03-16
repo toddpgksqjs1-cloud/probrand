@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, BarChart3, Globe, Zap, ArrowRight, Star, CheckCircle } from "lucide-react";
+import { Search, BarChart3, Globe, Zap, ArrowRight, Star, CheckCircle, TrendingUp, Users, Shield } from "lucide-react";
 
 export default function LandingPage() {
   const [url, setUrl] = useState("");
@@ -10,7 +10,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="border-b border-gray-100">
+      <header className="border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-md z-40">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -33,12 +33,16 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="py-20 px-6">
-        <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6">
+      <section className="py-20 md:py-28 px-6">
+        <div className="max-w-3xl mx-auto text-center animate-enter-up">
+          <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 text-sm px-4 py-1.5 rounded-full mb-6">
+            <TrendingUp size={14} />
+            <span>평균 +15점 개선 효과</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
             내 매장, 네이버에서
             <br />
-            <span className="text-blue-600">몇 점</span>일까?
+            <span className="text-gradient">몇 점</span>일까?
           </h1>
           <p className="text-lg text-gray-500 mb-10">
             30초 만에 무료로 내 네이버 플레이스를 진단해보세요.
@@ -46,7 +50,7 @@ export default function LandingPage() {
             점수와 함께 구체적인 개선 방법을 알려드립니다.
           </p>
 
-          <div className="max-w-xl mx-auto flex gap-3">
+          <div className="max-w-xl mx-auto flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
               <input
@@ -59,13 +63,13 @@ export default function LandingPage() {
             </div>
             <Link
               href="/dashboard/analysis"
-              className="bg-blue-600 text-white px-8 py-4 rounded-xl font-medium hover:bg-blue-700 transition flex items-center gap-2 shrink-0"
+              className="bg-blue-600 text-white px-8 py-4 rounded-xl font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2 shrink-0"
             >
               분석하기
               <ArrowRight size={18} />
             </Link>
           </div>
-          <p className="text-sm text-gray-400 mt-4">가입 없이 바로 분석 가능</p>
+          <p className="text-sm text-gray-400 mt-4">가입 없이 바로 분석 가능 &middot; 30초 소요</p>
         </div>
       </section>
 
@@ -244,9 +248,24 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Final CTA */}
+      <section className="py-20 px-6 bg-blue-600">
+        <div className="max-w-3xl mx-auto text-center text-white">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">지금 바로 내 매장 점수를 확인하세요</h2>
+          <p className="text-blue-100 mb-8">무료로 시작, 30초면 충분합니다.</p>
+          <Link
+            href="/signup"
+            className="inline-flex items-center gap-2 bg-white text-blue-600 px-8 py-4 rounded-xl font-bold hover:bg-blue-50 transition"
+          >
+            무료로 시작하기
+            <ArrowRight size={18} />
+          </Link>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="py-8 px-6 border-t border-gray-100">
-        <div className="max-w-6xl mx-auto flex items-center justify-between text-sm text-gray-400">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
               <span className="text-white font-bold text-xs">H</span>

@@ -16,19 +16,18 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
     setIsSubmitting(true);
 
-    // Basic validation
     if (!email.trim() || !password.trim()) {
       setError("이메일과 비밀번호를 입력해주세요.");
       setIsSubmitting(false);
       return;
     }
 
-    const result = login(email, password);
+    const result = await login(email, password);
 
     if (result.success) {
       router.push("/dashboard");

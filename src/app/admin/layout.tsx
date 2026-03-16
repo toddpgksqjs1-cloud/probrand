@@ -16,7 +16,6 @@ import {
   LogOut,
 } from "lucide-react";
 
-const ADMIN_PASSWORD = "hyun2026!";
 const ADMIN_SESSION_KEY = "hyun_admin_session";
 
 const navItems = [
@@ -43,14 +42,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setIsChecking(false);
   }, []);
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      localStorage.setItem(ADMIN_SESSION_KEY, "authenticated");
-      setIsAdminAuth(true);
-      setError("");
-    } else {
-      setError("관리자 비밀번호가 올바르지 않습니다.");
+    try {
+      const res = await fetch("/api/admin/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      if (res.ok) {
+        localStorage.setItem(ADMIN_SESSION_KEY, "authenticated");
+        setIsAdminAuth(true);
+        setError("");
+      } else {
+        const data = await res.json();
+        setError(data.error || "관리자 비밀번호가 올바르지 않습니다.");
+      }
+    } catch {
+      setError("서버 연결에 실패했습니다.");
     }
   };
 
