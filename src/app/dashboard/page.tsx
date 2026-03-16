@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowUpRight, CheckCircle, Circle, Search, TrendingUp } from "lucide-react";
+import { ArrowUpRight, CheckCircle, Circle, Search, TrendingUp, Store as StoreIcon, BarChart3, Settings, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { storesStorage, analysesStorage, actionsStorage } from "@/lib/storage";
 import type { Store, Analysis, Action } from "@/lib/storage";
@@ -62,31 +63,24 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!user) return;
 
-    // Get or create store
-    let stores = storesStorage.getAll(user.id);
-    let currentStore: Store;
-
+    // Load existing store (do NOT auto-create)
+    const stores = storesStorage.getAll(user.id);
     if (stores.length === 0) {
-      currentStore = storesStorage.create(user.id, {
-        name: user.businessName || `${user.name}의 매장`,
-        category: user.businessCategory || "카페/디저트",
-        address: user.location || "서울 강남구",
-        naverPlaceUrl: user.naverPlaceUrl || "",
-      });
-    } else {
-      currentStore = stores[0];
+      // New user: no store registered yet → show onboarding
+      return;
     }
+
+    const currentStore = stores[0];
     setStore(currentStore);
 
-    // Get or create analysis
+    // Load existing analysis (do NOT auto-generate)
     const allAnalyses = analysesStorage.getByStoreId(user.id, currentStore.id);
-    let latestAnalysis: Analysis;
-
     if (allAnalyses.length === 0) {
-      latestAnalysis = runAnalysis(currentStore, user.id);
-    } else {
-      latestAnalysis = allAnalyses[allAnalyses.length - 1];
+      // Store exists but no analysis yet → show "run analysis" CTA
+      return;
     }
+
+    const latestAnalysis = allAnalyses[allAnalyses.length - 1];
     setAnalysis(latestAnalysis);
 
     // Load actions
@@ -181,10 +175,142 @@ export default function DashboardPage() {
     }
   };
 
-  if (!user || !store || !analysis) {
+  const router = useRouter();
+
+  const handleRegisterStore = () => {
+    if (!user) return;
+    // Create store from user's signup data
+    const newStore = storesStorage.create(user.id, {
+      name: user.businessName || `${user.name}의 매장`,
+      category: user.businessCategory || "카페/디저트",
+      address: user.location || "",
+      naverPlaceUrl: user.naverPlaceUrl || "",
+    });
+    setStore(newStore);
+  };
+
+  const handleFirstAnalysis = () => {
+    if (!user || !store) return;
+    setIsAnalyzing(true);
+    setTimeout(() => {
+      const newAnalysis = runAnalysis(store, user.id);
+      setAnalysis(newAnalysis);
+      setActions(actionsStorage.getAll(store.id));
+      setScoreHistory(generateScoreHistory(newAnalysis.score));
+      setMarketingData(generateMarketingStats({
+        businessName: store.name,
+        category: store.category,
+        location: store.address,
+      }));
+      const allUserAnalyses = analysesStorage.getAll(user.id);
+      const recent = allUserAnalyses.slice(-3).reverse().map((a) => {
+        const s = storesStorage.getById(user.id, a.storeId);
+        return { name: s?.name || "매장", score: a.score };
+      });
+      setRecentAnalyses(recent);
+      setIsAnalyzing(false);
+    }, 800);
+  };
+
+  if (!user) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Onboarding: No store registered yet
+  if (!store) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <div className="text-center py-16">
+          <div className="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <Sparkles size={40} className="text-blue-600" />
+          </div>
+          <h2 className="text-2xl font-bold mb-3">환영합니다, {user.name}님!</h2>
+          <p className="text-gray-500 mb-8">
+            매장을 등록하고 네이버 플레이스 분석을 시작하세요.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10 text-left">
+            <div className="bg-white rounded-xl border border-gray-200 p-5">
+              <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mb-3">
+                <StoreIcon size={20} className="text-blue-600" />
+              </div>
+              <h4 className="font-medium text-sm mb-1">1. 매장 등록</h4>
+              <p className="text-xs text-gray-500">매장 정보를 입력하고 등록합니다</p>
+            </div>
+            <div className="bg-white rounded-xl border border-gray-200 p-5">
+              <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center mb-3">
+                <BarChart3 size={20} className="text-green-600" />
+              </div>
+              <h4 className="font-medium text-sm mb-1">2. 분석 실행</h4>
+              <p className="text-xs text-gray-500">네이버 플레이스 점수를 진단합니다</p>
+            </div>
+            <div className="bg-white rounded-xl border border-gray-200 p-5">
+              <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center mb-3">
+                <TrendingUp size={20} className="text-amber-600" />
+              </div>
+              <h4 className="font-medium text-sm mb-1">3. 개선 실행</h4>
+              <p className="text-xs text-gray-500">맞춤 개선 액션으로 점수를 올립니다</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={handleRegisterStore}
+              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-medium hover:bg-blue-700 transition flex items-center gap-2"
+            >
+              <StoreIcon size={18} />
+              매장 등록하기
+            </button>
+            <Link
+              href="/dashboard/settings"
+              className="text-sm text-gray-500 hover:text-gray-700 transition"
+            >
+              매장 정보를 직접 입력하려면 설정으로 →
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Store exists but no analysis yet
+  if (!analysis) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <div className="text-center py-16">
+          <div className="w-20 h-20 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <BarChart3 size={40} className="text-green-600" />
+          </div>
+          <h2 className="text-2xl font-bold mb-3">매장이 등록되었습니다!</h2>
+          <p className="text-gray-500 mb-2">
+            <span className="font-medium text-gray-700">{store.name}</span> ({store.category})
+          </p>
+          <p className="text-gray-500 mb-8">
+            이제 네이버 플레이스 분석을 실행해서 점수를 확인해보세요.
+          </p>
+
+          <div className="flex flex-col items-center gap-3">
+            <button
+              onClick={handleFirstAnalysis}
+              disabled={isAnalyzing}
+              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-medium hover:bg-blue-700 transition flex items-center gap-2 disabled:opacity-50"
+            >
+              <BarChart3 size={18} />
+              {isAnalyzing ? "분석 중..." : "첫 분석 시작하기"}
+            </button>
+            <Link
+              href="/dashboard/settings"
+              className="text-sm text-gray-500 hover:text-gray-700 transition flex items-center gap-1"
+            >
+              <Settings size={14} />
+              매장 정보 수정
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
